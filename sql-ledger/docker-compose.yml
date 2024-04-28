@@ -1,0 +1,46 @@
+version: '3.8'
+
+services:
+  app_proxy:
+    environment:
+      APP_HOST: sql-ledger_web_1
+      APP_PORT: 8031
+
+  db:
+    image: ch1pp3w4:sl-psql:latest
+    restart: on-failure
+    stop_grace_period: 1m
+    networks:
+      sl-net:
+        ipv4_address: 172.25.0.2
+    ports:
+      - 8032:5432
+    environment:
+      POSTGRES_USER: sql-ledger
+      POSTGRES_PASSWORD: sql-ledger
+      POSTGRES_DB: template1
+    volumes:
+     - db-data:/var/lib/postgresql/data
+
+  app:
+    image: ch1pp3w4:sl-app:latest
+    restart: on-failure
+    stop_grace_period: 1m
+    networks:
+      sl-net:
+        ipv4_address: 172.25.0.3
+    ports:
+      - 8031:80
+    depends_on: 
+      - db
+
+networks:
+  sl-net:
+    name: sl-net
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.25.0.0/24
+
+volumes:
+  db-data: {}
